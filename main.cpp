@@ -14,9 +14,13 @@ std::map <int, std::string> ops
 std::map <std::string, int> registers
 	{{"PC", 0}, {"MAR", 1}, {"IR", 2}, {"MDR", 3}, {"ACC", 4}, {"B", 5}, {"ALU_TMP", 6}};
 
+std::string instructs[8] = {
+	"lda", "sta", "add", "sub", "mba", "jmp", "jn", "hlt"
+};
+
 int main(int argc, char const *argv[]) {
 
-	
+
 
 	std::ifstream ram, addr, uprog;
 	ram.open("ram.txt");
