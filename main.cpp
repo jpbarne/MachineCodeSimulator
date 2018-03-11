@@ -10,17 +10,17 @@ std::map <int, std::string> ops
 	 {6, "LD"}, {7, "ED"}, {8, "LI"}, {9, "EI"}, {10, "LA"},
 	 {11, "EA"}, {12, "A"}, {13, "S"}, {14, "EU"}, {15, "LB"},
 	 {16, "CD"}, {17, "MAP"}, {18, "HLT"}};
-
-std::map <std::string, int> registers
-	{{"PC", 0}, {"MAR", 1}, {"IR", 2}, {"MDR", 3}, {"ACC", 4}, {"B", 5}, {"ALU_TMP", 6}};
+int pc, mar, ir, mdr, acc, b, alu;
 
 std::string instructs[8] = {
 	"lda", "sta", "add", "sub", "mba", "jmp", "jn", "hlt"
 };
 
+int RAM[256];
+int wordCnt;
+int ROM[32];
+ 
 int main(int argc, char const *argv[]) {
-
-
 
 	std::ifstream ram, addr, uprog;
 	ram.open("ram.txt");
@@ -32,12 +32,21 @@ int main(int argc, char const *argv[]) {
 	          << "addr value" << std::endl;
 	int i = 0, value;
 	while (ram >> value) {
+		RAM[i] = value & 0xfff;
 		std::cout << i++ << ": " << std::setfill('0') << std::setw(3)
 		          << value << std::endl;
+		if(i >= 256)
+		{
+			std::cout << "RAM overflow" << std::endl;
+			exit(1);
+		}
 	}
+	wordCnt = i;
+	for(; i < 256; i++)
+		RAM[i] = 0;
 
 	//print addr
-	std::cout << "Contents of address ROM" << std::endl
+	std::cout << std::endl << "Contents of address ROM" << std::endl
 	          << "opc addr" << std::endl;
 	i = 0;
 	while (addr >> std::hex >> value) {
@@ -50,6 +59,7 @@ int main(int argc, char const *argv[]) {
 	          << "addr contents" << std::endl;
 	i = 0;
 	while (uprog >> std::hex >> value) {
+		ROM[i] = value & 0xffffff;
 		//Print out addr contents
 		std::cout << std::setfill(' ') << std::setw(2) << i++ << ": "
 		<< std::setfill('0') << std::setw(6) << std::hex << value << " ";
@@ -72,8 +82,24 @@ int main(int argc, char const *argv[]) {
 							<< std::endl;
 	}
 
+	//print initial register values
+	pc = 0; mar = 0; mdr = 0; acc = 0; alu = 0; b = 0; ir = 0;
+	std::cout << std::endl << "initial register values" << std::endl;
+	std::cout << " pc mar mdr acc alu   b   ir" << std::endl;
+	std::cout << "  " << pc << "   " << mar << "   " <<  mdr << "   "
+				 << acc << "   " << alu << "   " << b << "   " << ir << std::endl;
 
+	//execute microinstructions
+	std::cout << std::endl
+				 << "control signals and register values after each microinstruction"
+				 << std::endl;
 
+	std::cout << "                     mh" << std::endl
+				 << "   ilelrwleleleasel cal" << std::endl
+				 << "uc pppm  ddiiaa  ub dpt ja pc mar mdr acc alu   b  ir"
+				 << std::endl;
+
+	
 
 	ram.close();
 	addr.close();
