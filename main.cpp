@@ -5,13 +5,14 @@
 #include <string>
 #include <cmath>
 
+//********Globals**********//
 std::map <int, std::string> ops
 	{{0, "IP"}, {1, "LP"}, {2, "EP"}, {3, "LM"}, {4, "R"}, {5, "W"},
 	 {6, "LD"}, {7, "ED"}, {8, "LI"}, {9, "EI"}, {10, "LA"},
 	 {11, "EA"}, {12, "A"}, {13, "S"}, {14, "EU"}, {15, "LB"},
 	 {16, "CD"}, {17, "MAP"}, {18, "HLT"}};
-	 
-int pc, mar, ir, mdr, acc, b, alu;
+
+int pc = 0, mar = 0, ir = 0, mdr = 0, acc = 0, b = 0, alu = 0, halt = 0;
 
 std::string instructs[8] = {
 	"lda", "sta", "add", "sub", "mba", "jmp", "jn", "hlt"
@@ -21,9 +22,66 @@ int RAM[256];
 int wordCnt;
 int ROM[32];
 
+//******Functions*******//
+
+//load and read files
 void load_ram();
 void load_rom();
 void load_uprog();
+
+//instructrion fetch routine
+void fetch() {
+	mar = pc;
+	mdr = ram[mar];
+	ir = mdr;
+	pc++;
+}
+
+//set of instruction execution routines
+void inv() {
+	std::cout << "invalid opcode" << std::endl;
+	exit(1);
+}
+
+void lda() {
+	mar = ir & 0xff;
+	mdr = ram[mar];
+	acc = mdr;
+}
+
+void sta() {
+	mar = ir & 0xff;
+	mdr = acc;
+	ram[mar] = mdr;
+}
+
+void add() {
+	alu = (acc + b) & 0xfff;
+	acc = alu;
+}
+
+void sub() {
+	alu = (acc - b) & 0xfff;
+	acc = alu;
+}
+
+void mba() {
+	b = acc;
+}
+
+void jmp() {
+	pc = ir & 0xff;
+}
+
+void jneg() {
+	if (acc >> 11) {
+		pc = ir & 0xff;
+	}
+}
+
+void hlt() {
+	halt = 1;
+}
 
 int main(int argc, char const *argv[]) {
 	load_ram();
