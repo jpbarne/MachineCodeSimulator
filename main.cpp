@@ -24,7 +24,10 @@ int addrROM[16];
 int ctrlROM[32];
 
 bool signals[19];
+int crja;
 int bus;
+int microCntr = 0;
+int oldUCnt = 0;
 
 //******Functions*******//
 
@@ -34,9 +37,10 @@ void load_rom();
 void load_uprog();
 
 //print while executing
-void print_cROM();
+void print_cROM(int word);
 void execute();
 void print_registers();
+void set_signals(int word);
 
 //instructrion fetch routine
 void fetch() {
@@ -114,11 +118,18 @@ int main(int argc, char const *argv[]) {
 				 << "uc pppm  ddiiaa  ub dpt ja pc mar mdr acc alu   b  ir"
 				 << std::endl;
 
-	//while(!signals[18]){
-		print_cROM();
+
+	//The i = 4 used to limit microCntr below is arbitrary, just to stop infinite
+	//loops for now - does first 4 cycles
+	int i = 0;
+	while(i < 4){//!signals[18]){
+		set_signals(microCntr);
 		execute();
+		print_cROM(oldUCnt);
 		print_registers();
-	//}
+
+		i++;
+	}
 
 	return 0;
 }
@@ -131,7 +142,7 @@ void load_ram() {
 	          << "addr value" << std::endl;
 	int i = 0, value;
 	while (ram >> value) {
-		RAM[i] = value & 0xfff;
+		RAM[i] = value; //value & 0xfff;
 		std::cout << i++ << ": " << std::setfill('0') << std::setw(3)
 		          << value << std::endl;
 		if(i >= 256) {
@@ -157,7 +168,7 @@ void load_rom() {
 		std::cout << i++ << ": " << std::setfill('0') << std::setw(2)
 		          << std::hex << value << std::endl;
 	}
-
+	std::cout << std::endl;
 	addr.close();
 }
 
@@ -195,74 +206,105 @@ void load_uprog() {
 	uprog.close();
 }
 
-void print_cROM() {
-	int i = 0;
-		int value = ctrlROM[i];
+//Sets control signals for current word so that execute can run
+void set_signals(int word) {
+	int value = ctrlROM[word];
+
+	for(int code = 0; code < 19; code++)
+	{
+		int mask = (std::pow(2, 23 - code));
+		int result = mask & value;
+		if(result)
+		{
+			signals[code] = true;
+		}
+		else
+		{
+			signals[code] = false;
+		}
+	}
+	crja = value & 31;
+}
+
+//prints out signals from previous instruction
+void print_cROM(int word) {
+		int value = ctrlROM[word];
+
+		//uc - microcounter
+		std::cout << std::setfill('0') << std::setw(2) << microCntr << " ";
+
 		for(int code = 0; code < 19; code++)
 		{
 			int mask = (std::pow(2, 23 - code));
 			int result = mask & value;
 			if(result)
-			{
 				std::cout << 1;
-				signals[code] = true;
-			}
 			else
-			{
 				std::cout << 0;
-				signals[code] = false;
-			}
-			if(code == 15 || code == 19)
+			if(code == 15 || code == 18)
 				std::cout << " ";
 		}
+		//crja
+		std::cout << std::setfill('0') << std::setw(2) << std::hex << (value & 31);
 }
 
+//performs all necessary actions based on signals - updates microcounter
 void execute(){
 	//Enables signals
-	if(signals[2])
+	if(signals[2])//EP
 		bus = pc;
-	if(signals[7])
+	if(signals[7])//ED
 		bus = mdr;
-	if(signals[9])
+	if(signals[9])//EI
 		bus = ir;
-	if(signals[11])
+	if(signals[11])//EA
 		bus = alu;
-	if(signals[14])
+	if(signals[14])//EU
 		bus = b;
 
 	//Loads signals
-	if(signals[1])
-		pc = bus;
-	if(signals[3])
+	if(signals[1])//LP
+		pc = bus & 0xff;
+	if(signals[3])//LM
 		mar = bus;
-	if(signals[6])
+	if(signals[6])//LD
 		mdr = bus;
-	if(signals[8])
+	if(signals[8])//LI
 		ir = bus;
-	if(signals[10])
+	if(signals[10])//LA
 		alu = bus;
-	if(signals[15])
+	if(signals[15])//LB
 		b = bus;
 
 	//Read Write signals
-	if(signals[4])
+	if(signals[4])//R
 		mdr = RAM[mar];
-	if(signals[5])
+	if(signals[5])//W
 		RAM[mar] = mdr;
 
 	//ALU signals
-	if(signals[12])
+	if(signals[12])//A
 		alu = alu + b;
-	if(signals[13])
+	if(signals[13])//S
 		alu = alu - b;
 
 	//PC
-	if(signals[0])
+	if(signals[0])//IP
 		pc++;
+
+		//For testing purposes
+		oldUCnt = microCntr;
+
+		//NOT COMPLETE!!!
+	if(signals[17]) // MAP
+		microCntr = addrROM[mdr / 100];
+	if(!signals[17] && !signals[16])
+		microCntr = crja;
+
 
 }
 
 void print_registers(){
-	std::cout << "  " << pc << "   " << mar << "   " <<  mdr << "   "
+	std::cout << "  " << pc << "   " << std::dec << mar << " " << std::setw(2)<< mdr
 				 << acc << "   " << alu << "   " << b << "   " << ir << std::endl;
 }
