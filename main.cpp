@@ -20,7 +20,8 @@ std::string instructs[8] = {
 
 int RAM[256];
 int wordCnt;
-int ROM[32];
+int addrROM[16];
+int ctrlROM[32];
 
 //******Functions*******//
 
@@ -29,10 +30,13 @@ void load_ram();
 void load_rom();
 void load_uprog();
 
+//print while executing
+void print_cROM();
+
 //instructrion fetch routine
 void fetch() {
 	mar = pc;
-	mdr = ram[mar];
+	mdr = RAM[mar];
 	ir = mdr;
 	pc++;
 }
@@ -45,14 +49,14 @@ void inv() {
 
 void lda() {
 	mar = ir & 0xff;
-	mdr = ram[mar];
+	mdr = RAM[mar];
 	acc = mdr;
 }
 
 void sta() {
 	mar = ir & 0xff;
 	mdr = acc;
-	ram[mar] = mdr;
+	RAM[mar] = mdr;
 }
 
 void add() {
@@ -104,7 +108,8 @@ int main(int argc, char const *argv[]) {
 				 << "   ilelrwleleleasel cal" << std::endl
 				 << "uc pppm  ddiiaa  ub dpt ja pc mar mdr acc alu   b  ir"
 				 << std::endl;
-
+	
+	print_cROM();
 
 	return 0;
 }
@@ -139,7 +144,7 @@ void load_rom() {
 	          << "opc addr" << std::endl;
 	int i = 0, value;
 	while (addr >> std::hex >> value) {
-		ROM[i] = value & 0xffffff;
+		addrROM[i] = value & 0x1f;
 		std::cout << i++ << ": " << std::setfill('0') << std::setw(2)
 		          << std::hex << value << std::endl;
 	}
@@ -155,6 +160,8 @@ void load_uprog() {
 	          << "addr contents" << std::endl;
 	int i = 0, value;
 	while (uprog >> std::hex >> value) {
+		ctrlROM[i] = value & 0xffffff;
+		
 		//Print out uprog contents
 		std::cout << std::setfill(' ') << std::setw(2) << i++ << ": "
 		<< std::setfill('0') << std::setw(6) << std::hex << value << " ";
@@ -177,4 +184,14 @@ void load_uprog() {
 							<< crja	<< std::endl;
 	}
 	uprog.close();
+}
+
+void print_cROM() {
+	int i = 0;
+	while(ctrlROM[i] != 0xffffff)
+	{
+		for (int j = 0; j < 19; j++) {
+
+		i++;
+	}
 }
