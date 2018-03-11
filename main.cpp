@@ -23,6 +23,9 @@ int wordCnt;
 int addrROM[16];
 int ctrlROM[32];
 
+bool signals[19];
+int bus;
+
 //******Functions*******//
 
 //load and read files
@@ -32,6 +35,8 @@ void load_uprog();
 
 //print while executing
 void print_cROM();
+void execute();
+void print_registers();
 
 //instructrion fetch routine
 void fetch() {
@@ -108,8 +113,12 @@ int main(int argc, char const *argv[]) {
 				 << "   ilelrwleleleasel cal" << std::endl
 				 << "uc pppm  ddiiaa  ub dpt ja pc mar mdr acc alu   b  ir"
 				 << std::endl;
-	
-	print_cROM();
+
+	//while(!signals[18]){
+		print_cROM();
+		execute();
+		print_registers();
+	//}
 
 	return 0;
 }
@@ -161,7 +170,7 @@ void load_uprog() {
 	int i = 0, value;
 	while (uprog >> std::hex >> value) {
 		ctrlROM[i] = value & 0xffffff;
-		
+
 		//Print out uprog contents
 		std::cout << std::setfill(' ') << std::setw(2) << i++ << ": "
 		<< std::setfill('0') << std::setw(6) << std::hex << value << " ";
@@ -188,10 +197,72 @@ void load_uprog() {
 
 void print_cROM() {
 	int i = 0;
-	while(ctrlROM[i] != 0xffffff)
-	{
-		for (int j = 0; j < 19; j++) {
+		int value = ctrlROM[i];
+		for(int code = 0; code < 19; code++)
+		{
+			int mask = (std::pow(2, 23 - code));
+			int result = mask & value;
+			if(result)
+			{
+				std::cout << 1;
+				signals[code] = true;
+			}
+			else
+			{
+				std::cout << 0;
+				signals[code] = false;
+			}
+			if(code == 15 || code == 19)
+				std::cout << " ";
+		}
+}
 
-		i++;
-	}
+void execute(){
+	//Enables signals
+	if(signals[2])
+		bus = pc;
+	if(signals[7])
+		bus = mdr;
+	if(signals[9])
+		bus = ir;
+	if(signals[11])
+		bus = alu;
+	if(signals[14])
+		bus = b;
+
+	//Loads signals
+	if(signals[1])
+		pc = bus;
+	if(signals[3])
+		mar = bus;
+	if(signals[6])
+		mdr = bus;
+	if(signals[8])
+		ir = bus;
+	if(signals[10])
+		alu = bus;
+	if(signals[15])
+		b = bus;
+
+	//Read Write signals
+	if(signals[4])
+		mdr = RAM[mar];
+	if(signals[5])
+		RAM[mar] = mdr;
+
+	//ALU signals
+	if(signals[12])
+		alu = alu + b;
+	if(signals[13])
+		alu = alu - b;
+
+	//PC
+	if(signals[0])
+		pc++;
+
+}
+
+void print_registers(){
+	std::cout << "  " << pc << "   " << mar << "   " <<  mdr << "   "
+				 << acc << "   " << alu << "   " << b << "   " << ir << std::endl;
 }
