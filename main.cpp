@@ -290,9 +290,9 @@ bool execute(){
 
 	//ALU signals
 	if(signals[12])//A
-		alu = acc + b;
+		alu = (acc + b) & 0xfff;
 	if(signals[13])//S
-		alu = acc - b;
+		alu = (acc - b) & 0xfff;
 
 	//PC
 	if(signals[0])//IP
@@ -341,7 +341,7 @@ void print_ram(){
 	std::cout << "Contents of RAM memory" << std::endl
 						<< "addr value" << std::endl;
 
-for(int i = 0; i < 24; i++){
+for(int i = 0; i < 23; i++){
 		std::cout << i << std::hex << ": " << std::setfill('0') << std::setw(3)
 							<< RAM[i] << std::endl;
 	}
