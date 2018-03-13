@@ -38,9 +38,12 @@ void load_uprog();
 
 //print while executing
 void print_cROM(int word);
-void execute();
+bool execute();
 void print_registers();
 void set_signals(int word);
+void print_signals();
+void print_ram();
+
 
 //instructrion fetch routine
 void fetch() {
@@ -121,15 +124,18 @@ int main(int argc, char const *argv[]) {
 
 	//The i = 4 used to limit microCntr below is arbitrary, just to stop infinite
 	//loops for now - does first 4 cycles
-	int i = 0;
-	while(i < 8){//!signals[18]){
+	//int i = 0;
+	bool running = true;
+	while(running){//!signals[18]){
 		set_signals(microCntr);
-		execute();
+		running = execute();
 		print_cROM(oldUCnt);
 		print_registers();
+		print_signals();
 
-		i++;
+		//i++;
 	}
+	print_ram();
 
 	return 0;
 }
@@ -249,7 +255,7 @@ void print_cROM(int word) {
 }
 
 //performs all necessary actions based on signals - updates microcounter
-void execute(){
+bool execute(){
 	//Enables signals
 	if(signals[2])//EP
 		bus = pc;
@@ -258,21 +264,21 @@ void execute(){
 	if(signals[9])//EI
 		bus = ir;
 	if(signals[11])//EA
-		bus = alu;
+		bus = acc;
 	if(signals[14])//EU
-		bus = b;
+		bus = alu;
 
 	//Loads signals
 	if(signals[1])//LP
 		pc = bus & 0xff;
 	if(signals[3])//LM
-		mar = bus;
+		mar = bus &  0xff;
 	if(signals[6])//LD
-		mdr = bus;
+		mdr = bus & 0xfff;
 	if(signals[8])//LI
 		ir = bus;
 	if(signals[10])//LA
-		alu = bus;
+		acc = bus;
 	if(signals[15])//LB
 		b = bus;
 
@@ -284,9 +290,9 @@ void execute(){
 
 	//ALU signals
 	if(signals[12])//A
-		alu = alu + b;
+		alu = acc + b;
 	if(signals[13])//S
-		alu = alu - b;
+		alu = acc - b;
 
 	//PC
 	if(signals[0])//IP
@@ -300,15 +306,43 @@ void execute(){
 		microCntr = addrROM[mdr >> 8];// 100];
 	if(!signals[17] && !signals[16])
 		microCntr = crja;
+	if(signals[16])
+		microCntr = crja;
+
+	if(signals[18])
+		return 0;
+	return 1;
+}
+
+void print_registers(){
+	std::cout << "  " << pc << std::setfill(' ') << std::setw(4) << mar << std::setw(4) << mdr
+				 << std::setw(4) << acc << std::setw(4) << alu << std::setw(4) << b << std::setw(4) << ir;
 
 
 }
 
-void print_registers(){
-	std::cout << "  " << pc << "   " << mar << " " << mdr
-				 << acc << "   " << alu << "   " << b << "   " << ir << std::endl;
+void print_signals(){
+	for(int code = 0; code < 19; code++){
+		if(signals[code])
+		{
+			std::cout << " " << ops[code];
+		}
+	}
 
 	//new line for finished instrution
 	if(microCntr == 0)
-		 std::cout << std::endl;
+		 std::cout << std::endl << std::endl;
+	else
+		std::cout << std::endl;
+}
+
+void print_ram(){
+	//print ram
+	std::cout << "Contents of RAM memory" << std::endl
+						<< "addr value" << std::endl;
+
+for(int i = 0; i < 24; i++){
+		std::cout << i << std::hex << ": " << std::setfill('0') << std::setw(3)
+							<< RAM[i] << std::endl;
+	}
 }
