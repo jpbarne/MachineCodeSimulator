@@ -44,60 +44,60 @@ void set_signals(int word);
 void print_signals();
 void print_ram();
 
-
-//instructrion fetch routine
-void fetch() {
-	mar = pc;
-	mdr = RAM[mar];
-	ir = mdr;
-	pc++;
-}
-
-//set of instruction execution routines
-void inv() {
-	std::cout << "invalid opcode" << std::endl;
-	exit(1);
-}
-
-void lda() {
-	mar = ir & 0xff;
-	mdr = RAM[mar];
-	acc = mdr;
-}
-
-void sta() {
-	mar = ir & 0xff;
-	mdr = acc;
-	RAM[mar] = mdr;
-}
-
-void add() {
-	alu = (acc + b) & 0xfff;
-	acc = alu;
-}
-
-void sub() {
-	alu = (acc - b) & 0xfff;
-	acc = alu;
-}
-
-void mba() {
-	b = acc;
-}
-
-void jmp() {
-	pc = ir & 0xff;
-}
-
-void jneg() {
-	if (acc >> 11) {
-		pc = ir & 0xff;
-	}
-}
-
-void hlt() {
-	halt = 1;
-}
+//
+// //instructrion fetch routine
+// void fetch() {
+// 	mar = pc;
+// 	mdr = RAM[mar];
+// 	ir = mdr;
+// 	pc++;
+// }
+//
+// //set of instruction execution routines
+// void inv() {
+// 	std::cout << "invalid opcode" << std::endl;
+// 	exit(1);
+// }
+//
+// void lda() {
+// 	mar = ir & 0xff;
+// 	mdr = RAM[mar];
+// 	acc = mdr;
+// }
+//
+// void sta() {
+// 	mar = ir & 0xff;
+// 	mdr = acc;
+// 	RAM[mar] = mdr;
+// }
+//
+// void add() {
+// 	alu = (acc + b) & 0xfff;
+// 	acc = alu;
+// }
+//
+// void sub() {
+// 	alu = (acc - b) & 0xfff;
+// 	acc = alu;
+// }
+//
+// void mba() {
+// 	b = acc;
+// }
+//
+// void jmp() {
+// 	pc = ir & 0xff;
+// }
+//
+// void jneg() {
+// 	if (acc >> 11) {
+// 		pc = ir & 0xff;
+// 	}
+// }
+//
+// void hlt() {
+// 	halt = 1;
+// }
 
 int main(int argc, char const *argv[]) {
 	load_ram();
