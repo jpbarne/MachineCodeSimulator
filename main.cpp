@@ -122,7 +122,7 @@ int main(int argc, char const *argv[]) {
 	//The i = 4 used to limit microCntr below is arbitrary, just to stop infinite
 	//loops for now - does first 4 cycles
 	int i = 0;
-	while(i < 4){//!signals[18]){
+	while(i < 8){//!signals[18]){
 		set_signals(microCntr);
 		execute();
 		print_cROM(oldUCnt);
@@ -141,9 +141,9 @@ void load_ram() {
 	std::cout << "Contents of RAM memory" << std::endl
 	          << "addr value" << std::endl;
 	int i = 0, value;
-	while (ram >> value) {
+	while (ram >> std::hex >> value) {
 		RAM[i] = value; //value & 0xfff;
-		std::cout << i++ << ": " << std::setfill('0') << std::setw(3)
+		std::cout << i++ << std::hex << ": " << std::setfill('0') << std::setw(3)
 		          << value << std::endl;
 		if(i >= 256) {
 			std::cout << "RAM overflow" << std::endl;
@@ -231,7 +231,7 @@ void print_cROM(int word) {
 		int value = ctrlROM[word];
 
 		//uc - microcounter
-		std::cout << std::setfill('0') << std::setw(2) << microCntr << " ";
+		std::cout << std::hex <<std::setfill('0') << std::setw(2) << microCntr << " ";
 
 		for(int code = 0; code < 19; code++)
 		{
@@ -293,11 +293,11 @@ void execute(){
 		pc++;
 
 		//For testing purposes
-		oldUCnt = microCntr;
+	oldUCnt = microCntr;
 
 		//NOT COMPLETE!!!
 	if(signals[17]) // MAP
-		microCntr = addrROM[mdr / 100];
+		microCntr = addrROM[mdr >> 8];// 100];
 	if(!signals[17] && !signals[16])
 		microCntr = crja;
 
@@ -305,6 +305,10 @@ void execute(){
 }
 
 void print_registers(){
-	std::cout << "  " << pc << "   " << std::dec << mar << " " << std::setw(2)<< mdr
+	std::cout << "  " << pc << "   " << mar << " " << mdr
 				 << acc << "   " << alu << "   " << b << "   " << ir << std::endl;
+
+	//new line for finished instrution
+	if(microCntr == 0)
+		 std::cout << std::endl;
 }
