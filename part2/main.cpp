@@ -1,3 +1,12 @@
+// Jason Barnes & Mitchell Bowser
+// CPSC 3300 - Prof. Mark Smotherman
+// Project 2 - DUE: March 15, 2018
+//
+// "Simulate Eckert's Microprogrammed Machine"
+//
+// COMPILE: g++ -Wall -std=c++11 main.cpp
+
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -44,61 +53,6 @@ void set_signals(int word);
 void print_signals();
 void print_ram();
 
-//
-// //instructrion fetch routine
-// void fetch() {
-// 	mar = pc;
-// 	mdr = RAM[mar];
-// 	ir = mdr;
-// 	pc++;
-// }
-//
-// //set of instruction execution routines
-// void inv() {
-// 	std::cout << "invalid opcode" << std::endl;
-// 	exit(1);
-// }
-//
-// void lda() {
-// 	mar = ir & 0xff;
-// 	mdr = RAM[mar];
-// 	acc = mdr;
-// }
-//
-// void sta() {
-// 	mar = ir & 0xff;
-// 	mdr = acc;
-// 	RAM[mar] = mdr;
-// }
-//
-// void add() {
-// 	alu = (acc + b) & 0xfff;
-// 	acc = alu;
-// }
-//
-// void sub() {
-// 	alu = (acc - b) & 0xfff;
-// 	acc = alu;
-// }
-//
-// void mba() {
-// 	b = acc;
-// }
-//
-// void jmp() {
-// 	pc = ir & 0xff;
-// }
-//
-// void jneg() {
-// 	if (acc >> 11) {
-// 		pc = ir & 0xff;
-// 	}
-// }
-//
-// void hlt() {
-// 	halt = 1;
-// }
-
 int main(int argc, char const *argv[]) {
 	load_ram();
 	load_rom();
@@ -122,14 +76,14 @@ int main(int argc, char const *argv[]) {
 				 << std::endl;
 
 	bool running = true;
-	while(running){
+	while(running){ // while no halt signal
 		set_signals(microCntr);
 		running = execute();
 		print_cROM(oldUCnt);
 		print_registers();
 		print_signals();
 	}
-	print_ram();
+	print_ram(); //print final state of RAM
 
 	return 0;
 }
@@ -158,6 +112,7 @@ void load_ram() {
 	ram.close();
 }
 
+/**** Open ADDR.TXT and print contents****/
 void load_rom() {
 	std::ifstream addr("addr.txt");
 
@@ -174,6 +129,7 @@ void load_rom() {
 	addr.close();
 }
 
+/**** Open UPROG.TXT, print contents, and set ctrlROM array****/
 void load_uprog() {
 	std::ifstream uprog("uprog.txt");
 
@@ -188,12 +144,13 @@ void load_uprog() {
 		std::cout << std::setfill(' ') << std::setw(2) << i++ << ": "
 		<< std::setfill('0') << std::setw(6) << std::hex << value << " ";
 
+		//decode line and determine signal codes, then print
 		for(int code = 0; code < 19; code++)
 		{
 			int mask = (std::pow(2, 23 - code));
 			int result = mask & value;
-			if(result)
-				std::cout << ops[code] << " ";
+
+			if(result) std::cout << ops[code] << " ";
 			else {
 				if (code == 4 || code == 5 || code == 12 || code == 13)
 					std::cout << "  ";
@@ -211,27 +168,22 @@ void load_uprog() {
 	uprog.close();
 }
 
-//Sets control signals for current word so that execute can run
+/***Sets control signals for current word so that execute can run ***/
 void set_signals(int word) {
 	int value = ctrlROM[word];
 
+	//for each code signal
 	for(int code = 0; code < 19; code++)
 	{
 		int mask = (std::pow(2, 23 - code));
 		int result = mask & value;
-		if(result)
-		{
-			signals[code] = true;
-		}
-		else
-		{
-			signals[code] = false;
-		}
+		if(result) signals[code] = true;
+		else signals[code] = false;
 	}
 	crja = value & 31;
 }
 
-//prints out signals from previous instruction
+/**** prints out signals from previous instruction ****/
 void print_cROM(int word) {
 		int value = ctrlROM[word];
 
@@ -242,12 +194,11 @@ void print_cROM(int word) {
 		{
 			int mask = (std::pow(2, 23 - code));
 			int result = mask & value;
-			if(result)
-				std::cout << 1;
-			else
-				std::cout << 0;
-			if(code == 15 || code == 18)
-				std::cout << " ";
+
+			if(result) std::cout << 1;
+			else std::cout << 0;
+
+			if(code == 15 || code == 18) std::cout << " ";
 		}
 		//crja
 		std::cout << std::setfill('0') << std::setw(2) << std::hex << (value & 31);
@@ -300,7 +251,6 @@ bool execute(){
 		//For testing purposes
 	oldUCnt = microCntr;
 
-		//NOT COMPLETE!!!
 	if(signals[17]) // MAP
 		microCntr = addrROM[mdr >> 8];// 100];
 	if(!signals[17] && !signals[16])
@@ -308,35 +258,28 @@ bool execute(){
 	if(signals[16])
 		microCntr = crja;
 
-	if(signals[18])
-		return 0;
-	return 1;
+	return (signals[18])? 0: 1; //0 if halt signal
 }
 
+/*** Print PC, MAR, MDR, ACC, ALU, B, and IR ***/
 void print_registers(){
-	std::cout << "  " << pc << std::setfill(' ') << std::setw(4) << mar << std::setw(4) << mdr
-				 << std::setw(4) << acc << std::setw(4) << alu << std::setw(4) << b << std::setw(4) << ir;
-
-
+	std::cout << "  " << pc << std::setfill(' ') << std::setw(4) << mar
+						<< std::setw(4) << mdr << std::setw(4) << acc << std::setw(4) << alu
+					  << std::setw(4) << b << std::setw(4) << ir;
 }
 
+/*** print operations code if active ***/
 void print_signals(){
-	for(int code = 0; code < 19; code++){
-		if(signals[code])
-		{
-			std::cout << " " << ops[code];
-		}
-	}
+	for(int code = 0; code < 19; code++)
+		if(signals[code]) std::cout << " " << ops[code];
 
 	//new line for finished instrution
-	if(microCntr == 0)
-		 std::cout << std::endl << std::endl;
-	else
-		std::cout << std::endl;
+	if(microCntr == 0) std::cout << std::endl << std::endl;
+	else std::cout << std::endl;
 }
 
+/*** Print final contents of RAM ***/
 void print_ram(){
-	//print ram
 	std::cout << "Contents of RAM memory" << std::endl
 						<< "addr value" << std::endl;
 
