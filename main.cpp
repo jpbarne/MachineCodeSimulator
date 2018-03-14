@@ -121,19 +121,13 @@ int main(int argc, char const *argv[]) {
 				 << "uc pppm  ddiiaa  ub dpt ja pc mar mdr acc alu   b  ir"
 				 << std::endl;
 
-
-	//The i = 4 used to limit microCntr below is arbitrary, just to stop infinite
-	//loops for now - does first 4 cycles
-	//int i = 0;
 	bool running = true;
-	while(running){//!signals[18]){
+	while(running){
 		set_signals(microCntr);
 		running = execute();
 		print_cROM(oldUCnt);
 		print_registers();
 		print_signals();
-
-		//i++;
 	}
 	print_ram();
 
@@ -143,14 +137,16 @@ int main(int argc, char const *argv[]) {
 void load_ram() {
 	std::ifstream ram("ram.txt");
 
-	//print ram
+	//print and store RAM from ram file
 	std::cout << "Contents of RAM memory" << std::endl
 	          << "addr value" << std::endl;
 	int i = 0, value;
 	while (ram >> std::hex >> value) {
 		RAM[i] = value; //value & 0xfff;
-		std::cout << i++ << std::hex << ": " << std::setfill('0') << std::setw(3)
+		std::cout << std::setw(2) << std::setfill(' ') << i++ << std::hex
+							<< ": " << std::setfill('0') << std::setw(3)
 		          << value << std::endl;
+
 		if(i >= 256) {
 			std::cout << "RAM overflow" << std::endl;
 			exit(1);
@@ -165,7 +161,7 @@ void load_ram() {
 void load_rom() {
 	std::ifstream addr("addr.txt");
 
-	//print addr
+	//print and store address ROM from addr file
 	std::cout << std::endl << "Contents of address ROM" << std::endl
 	          << "opc addr" << std::endl;
 	int i = 0, value;
@@ -182,8 +178,8 @@ void load_uprog() {
 	std::ifstream uprog("uprog.txt");
 
 	//print control ROM
-	std::cout << "Contents of control ROM with active signals identified" << std::endl
-	          << "addr contents" << std::endl;
+	std::cout << "Contents of control ROM with active signals identified"
+	 					<< std::endl << "addr contents" << std::endl;
 	int i = 0, value;
 	while (uprog >> std::hex >> value) {
 		ctrlROM[i] = value & 0xffffff;
@@ -199,8 +195,10 @@ void load_uprog() {
 			if(result)
 				std::cout << ops[code] << " ";
 			else {
-				if (code == 4 || code == 5 || code == 12 || code == 13) std::cout << "  ";
-				else if (code == 17 || code == 18) std::cout << "    ";
+				if (code == 4 || code == 5 || code == 12 || code == 13)
+					std::cout << "  ";
+				else if (code == 17 || code == 18)
+					std::cout << "    ";
 				std::cout << "   ";
 			}
 		}
@@ -342,7 +340,7 @@ void print_ram(){
 						<< "addr value" << std::endl;
 
 for(int i = 0; i < 23; i++){
-		std::cout << i << std::hex << ": " << std::setfill('0') << std::setw(3)
-							<< RAM[i] << std::endl;
+		std::cout << std::setfill(' ') << std::setw(2) << i << std::hex << ": "
+							<< std::setfill('0') << std::setw(3) << RAM[i] << std::endl;
 	}
 }
