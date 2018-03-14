@@ -283,8 +283,9 @@ void print_ram(){
 	std::cout << "Contents of RAM memory" << std::endl
 						<< "addr value" << std::endl;
 
-for(int i = 0; i < 23; i++){
-		std::cout << std::setfill(' ') << std::setw(2) << i << std::hex << ": "
-							<< std::setfill('0') << std::setw(3) << RAM[i] << std::endl;
+	for(int i = 0; i < 23; i++) {
+		if (RAM[i]) std::cout << std::setfill(' ') << std::setw(2) << i << std::hex
+													<< ": " << std::setfill('0') << std::setw(3) << RAM[i]
+													<< std::endl;
 	}
 }
